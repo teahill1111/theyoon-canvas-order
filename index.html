@@ -447,7 +447,6 @@ function renderCustOrderList(){
       +'<span style="font-size:11px;color:var(--text3);">'+o.time+'</span></div>';
     if(!isCancelled){
       html+='<div class="order-item-actions">'
-        +'<div class="action-btn" onclick="showOrderEntry(\''+o.id+'\')">수정</div>'
         +'<div class="action-btn" onclick="printReceipt(\''+o.id+'\')" style="background:var(--blue-bg);color:var(--blue-text);">인쇄</div>'
         +'<div class="action-btn danger" onclick="cancelOrder(\''+o.id+'\')">취소</div>'
         +'</div>';
