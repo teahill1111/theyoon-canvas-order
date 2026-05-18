@@ -607,7 +607,7 @@ function updateStats(){
   document.getElementById('s-ordered').textContent=active.length;
   document.getElementById('s-qty').textContent=active.reduce(function(s,o){return s+o.totalQty;},0);
   var rev=active.reduce(function(s,o){return s+o.total;},0);
-  document.getElementById('s-revenue').textContent=(rev/10000).toFixed(0)+'만원';
+  document.getElementById('s-revenue').textContent=rev.toLocaleString()+'원';
 }
 
 function renderOrderList(){
