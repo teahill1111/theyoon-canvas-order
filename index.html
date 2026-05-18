@@ -519,7 +519,7 @@ async function saveOrder(){
   // 수정인 경우 기존 주문 시퀀스 유지
   var custOrders=orders.filter(function(o){return o.customerId===selectedCustId;});
   var seq = isEdit
-    ? orders.find(function(o){return o.id===editingOrderId;}).orderSeq
+    ? orders.find(function(o){return String(o.id)===String(editingOrderId);}).orderSeq
     : custOrders.length+1;
 
   var order={
@@ -539,7 +539,7 @@ async function saveOrder(){
 
   // 로컬 저장
   if(isEdit){
-    var ei=orders.findIndex(function(o){return o.id===editingOrderId;});
+    var ei=orders.findIndex(function(o){return String(o.id)===String(editingOrderId);});
     if(ei>=0) orders[ei]=order;
   } else {
     orders.push(order);
