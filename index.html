@@ -54,23 +54,30 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 .success-sub { font-size: 14px; color: var(--text2); line-height: 1.6; white-space: pre-line; }
 .search-bar { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 12px 16px; margin-bottom: 12px; }
 .search-bar input { font-size: 15px; }
+/* 고객 카드 */
 .customer-card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
 .customer-card.has-order { border-left: 3px solid #3b6d11; }
-.customer-card.cancelled { border-left: 3px solid #a32d2d; opacity: .7; }
 .customer-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
 .customer-name { font-size: 16px; font-weight: 700; flex: 1; }
 .customer-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
 .badge-ordered { background: var(--green-bg); color: var(--green-text); }
 .badge-pending { background: var(--bg2); color: var(--text2); }
-.badge-cancelled { background: var(--red-bg); color: var(--red-text); }
 .customer-info { font-size: 13px; color: var(--text2); line-height: 1.6; }
+/* 주문 목록 카드 */
+.order-item-card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px 16px; margin-bottom: 10px; }
+.order-item-card.cancelled { opacity: .5; }
+.order-item-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.order-item-num { font-size: 12px; color: var(--text2); }
+.order-item-total { font-size: 16px; font-weight: 700; margin-left: auto; }
+.order-item-detail { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.order-item-actions { display: flex; gap: 8px; margin-top: 10px; }
+.action-btn { flex: 1; padding: 8px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); }
+.action-btn.danger { background: var(--red-bg); color: var(--red-text); border-color: var(--red-text); }
+/* 주문 입력 */
 .back-btn { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--blue-text); background: none; border: none; cursor: pointer; padding: 0; margin-bottom: 16px; }
 .customer-summary { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px 16px; margin-bottom: 12px; }
 .customer-summary .s-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .customer-summary .s-detail { font-size: 13px; color: var(--text2); line-height: 1.7; }
-.order-status-bar { border-radius: var(--radius); padding: 8px 12px; font-size: 13px; font-weight: 600; margin-bottom: 12px; text-align: center; }
-.order-status-bar.existing { background: var(--green-bg); color: var(--green-text); }
-.order-status-bar.cancelled { background: var(--red-bg); color: var(--red-text); }
 .product-row { display: flex; align-items: center; padding: 13px 16px; border-bottom: 0.5px solid var(--border); }
 .product-row:last-child { border-bottom: none; }
 .product-info { flex: 1; }
@@ -113,6 +120,7 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 14px; }
 .order-item-tag { display: inline-block; background: var(--bg2); border-radius: 6px; padding: 2px 7px; font-size: 12px; color: var(--text2); margin: 2px 2px 2px 0; }
+.new-order-btn { width: 100%; padding: 13px; background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; text-align: center; }
 </style>
 </head>
 <body>
@@ -169,19 +177,33 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     <div class="admin-tab" onclick="switchAdminTab('settings')">설정</div>
   </div>
 
+  <!-- 주문 입력 탭 -->
   <div id="atab-orders" class="content" style="padding-top:16px;">
-    <div id="admin-customer-list">
+
+    <!-- 1단계: 고객 목록 -->
+    <div id="view-customers">
       <div class="search-bar">
         <input type="text" id="admin-search" placeholder="이름 또는 연락처로 검색" oninput="renderCustomerList()">
       </div>
       <div id="customer-list"></div>
-      <div id="customer-empty" class="empty-state" style="display:none;">등록된 고객이 없습니다.<br>고객이 QR을 스캔해 등록하면 여기에 표시됩니다.</div>
+      <div id="customer-empty" class="empty-state" style="display:none;">등록된 고객이 없습니다.</div>
     </div>
 
-    <div id="admin-order-entry" style="display:none;">
-      <button class="back-btn" onclick="backToList()">← 고객 목록</button>
+    <!-- 2단계: 고객의 주문 목록 -->
+    <div id="view-order-list" style="display:none;">
+      <button class="back-btn" onclick="showView('customers')">← 고객 목록</button>
       <div class="customer-summary" id="cust-summary"></div>
-      <div id="order-status-bar"></div>
+      <div class="new-order-btn" onclick="showOrderEntry(null)">+ 새 주문 추가</div>
+      <div class="section-label">주문 내역</div>
+      <div id="cust-order-list"></div>
+      <div id="cust-order-empty" class="empty-state" style="display:none;padding:1.5rem;">아직 주문이 없습니다.</div>
+    </div>
+
+    <!-- 3단계: 주문 입력/수정 -->
+    <div id="view-order-entry" style="display:none;">
+      <button class="back-btn" onclick="showView('order-list')">← 주문 목록</button>
+      <div class="customer-summary" id="entry-cust-summary"></div>
+      <div id="edit-mode-bar"></div>
 
       <div class="section-label">주문 정보</div>
       <div class="card">
@@ -217,15 +239,16 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
         <div class="total-final"><span class="lbl">총 결제 금액</span><span class="amt" id="admin-total">0원</span></div>
       </div>
       <button class="primary-btn" id="save-btn" onclick="saveOrder()">주문 저장</button>
-      <button class="danger-btn" id="cancel-btn" onclick="cancelOrder()" style="display:none;">주문 취소</button>
       <div class="sync-status" id="admin-sync"></div>
     </div>
+
   </div>
 
+  <!-- 주문 목록 탭 -->
   <div id="atab-list" class="content" style="display:none;padding-top:16px;">
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">전체 고객</div><div class="stat-val" id="s-customers">0</div></div>
-      <div class="stat-card"><div class="stat-label">주문 완료</div><div class="stat-val" id="s-ordered">0</div></div>
+      <div class="stat-card"><div class="stat-label">유효 주문</div><div class="stat-val" id="s-ordered">0</div></div>
       <div class="stat-card"><div class="stat-label">총 수량</div><div class="stat-val" id="s-qty">0</div></div>
       <div class="stat-card"><div class="stat-label">총 매출</div><div class="stat-val" id="s-revenue">0</div></div>
     </div>
@@ -234,6 +257,7 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     <div id="order-empty" class="empty-state" style="display:none;">주문 내역이 없습니다.</div>
   </div>
 
+  <!-- 설정 탭 -->
   <div id="atab-settings" class="content" style="display:none;padding-top:16px;">
     <div class="section-label">Google Apps Script 연동</div>
     <div id="url-banner" class="url-banner">
@@ -267,12 +291,14 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 <script>
 var isAdmin = false;
 var selectedCustId = null;
+var editingOrderId = null; // null=신규, id=수정
 var adminQty = {};
 var segState = {
   pay:  {key:'card',     label:'카드'},
   recv: {key:'delivery', label:'택배배송'},
   paid: {key:'o',        label:'O'}
 };
+var recvToShipping = { delivery:'배송전', pickup:'현장수령완료', gallery:'미수령' };
 
 var customers = JSON.parse(localStorage.getItem('cv_customers')||'[]');
 var orders    = JSON.parse(localStorage.getItem('cv_orders')||'[]');
@@ -286,18 +312,20 @@ var products  = JSON.parse(localStorage.getItem('cv_products')||'null')||[
   {id:11,name:'캔버스 100호',price:220000}
 ];
 
-// 수령방법 → 배송여부 값 매핑
-var recvToShipping = {
-  delivery: '배송전',
-  pickup:   '현장수령완료',
-  gallery:  '미수령'
-};
-
 (function init(){
   if(scriptUrl) showConnected();
   var ev=localStorage.getItem('cv_event_name')||'';
   if(ev){document.getElementById('header-sub').textContent=ev;document.getElementById('event-name-input').value=ev;}
 })();
+
+// ── 뷰 전환 ──────────────────────────────────────────────────────────
+function showView(name) {
+  ['customers','order-list','order-entry'].forEach(function(v){
+    document.getElementById('view-'+v).style.display = v===name ? '' : 'none';
+  });
+  if(name==='order-list' && selectedCustId) renderCustOrderList();
+  if(name==='customers') renderCustomerList();
+}
 
 function toggleAdmin(){
   if(!isAdmin){
@@ -308,7 +336,7 @@ function toggleAdmin(){
   document.getElementById('page-customer').classList.toggle('active',!isAdmin);
   document.getElementById('page-admin').classList.toggle('active',isAdmin);
   document.querySelector('.admin-toggle').textContent=isAdmin?'고객화면':'관리자';
-  if(isAdmin) renderCustomerList();
+  if(isAdmin){ showView('customers'); renderCustomerList(); }
 }
 
 function switchAdminTab(tab){
@@ -342,12 +370,12 @@ async function submitCustomer(){
   var addr=document.getElementById('c-addr').value.trim();
   if(!name||!phone){alert('이름과 연락처를 입력해 주세요.');return;}
   if(!addr){alert('주소를 검색해 주세요.');return;}
-  var c={id:Date.now(),name:name,phone:phone,zip:document.getElementById('c-zip').value.trim(),addr:addr,detail:document.getElementById('c-detail').value.trim(),memo:document.getElementById('c-memo').value.trim(),time:new Date().toLocaleString('ko-KR'),synced:false};
+  var c={id:Date.now(),name:name,phone:phone,zip:document.getElementById('c-zip').value.trim(),addr:addr,detail:document.getElementById('c-detail').value.trim(),memo:document.getElementById('c-memo').value.trim(),time:new Date().toLocaleString('ko-KR')};
   customers.push(c); save('cv_customers',customers);
   document.getElementById('customer-form').style.display='none';
   document.getElementById('customer-success').style.display='block';
   document.getElementById('c-success-msg').textContent=name+'님의 정보가 등록되었습니다.\n담당자가 곧 도와드리겠습니다.';
-  if(scriptUrl){try{await post({type:'customer',data:c});c.synced=true;save('cv_customers',customers);}catch(e){}}
+  if(scriptUrl){try{await post({type:'customer',data:c});}catch(e){}}
 }
 
 function resetCustomer(){
@@ -366,23 +394,62 @@ function renderCustomerList(){
   empty.style.display='none';
   var html='';
   filtered.slice().reverse().forEach(function(c){
-    var order=orders.find(function(o){return o.customerId===c.id;});
-    var status=order?order.status:'pending';
-    var cardClass=status==='ordered'?'has-order':status==='cancelled'?'cancelled':'';
-    var badgeClass=status==='ordered'?'badge-ordered':status==='cancelled'?'badge-cancelled':'badge-pending';
-    var badgeText=status==='ordered'?'주문완료':status==='cancelled'?'취소됨':'미주문';
+    var custOrders=orders.filter(function(o){return o.customerId===c.id && o.status==='active';});
+    var hasOrder=custOrders.length>0;
+    var totalAmt=custOrders.reduce(function(s,o){return s+o.total;},0);
+    var summary=hasOrder ? custOrders.length+'건 · '+totalAmt.toLocaleString()+'원' : '';
     var addrShort=(c.zip?'['+c.zip+'] ':'')+c.addr+(c.detail?' '+c.detail:'');
-    var orderSummary=order&&order.status==='ordered'?'<br><span style="font-size:12px;color:var(--green-text);">'+order.itemStr+'</span>':'';
-    html+='<div class="customer-card '+cardClass+'" onclick="selectCustomer('+c.id+')">'
+    html+='<div class="customer-card'+(hasOrder?' has-order':'')+'" onclick="selectCustomer('+c.id+')">'
       +'<div class="customer-top"><span class="customer-name">'+c.name+'</span>'
-      +'<span class="customer-badge '+badgeClass+'">'+badgeText+'</span></div>'
-      +'<div class="customer-info">'+c.phone+'<br>'+addrShort+orderSummary+'</div></div>';
+      +'<span class="customer-badge '+(hasOrder?'badge-ordered':'badge-pending')+'">'+(hasOrder?'주문 '+custOrders.length+'건':'미주문')+'</span></div>'
+      +'<div class="customer-info">'+c.phone+'<br>'+addrShort+(summary?'<br><span style="color:var(--green-text);font-size:12px;">'+summary+'</span>':'')+'</div></div>';
   });
   list.innerHTML=html;
 }
 
 function selectCustomer(id){
-  selectedCustId=id; adminQty={};
+  selectedCustId=id;
+  var c=customers.find(function(x){return x.id===id;});
+  var addrFull=(c.zip?'['+c.zip+'] ':'')+c.addr+(c.detail?' '+c.detail:'');
+  var summaryHtml='<div class="s-name">'+c.name+'</div><div class="s-detail">'+c.phone+'<br>'+addrFull+(c.memo?'<br>요청: '+c.memo:'')+'</div>';
+  document.getElementById('cust-summary').innerHTML=summaryHtml;
+  showView('order-list');
+}
+
+// ── 고객의 주문 목록 ──────────────────────────────────────────────────
+function renderCustOrderList(){
+  var custOrders=orders.filter(function(o){return o.customerId===selectedCustId;});
+  var empty=document.getElementById('cust-order-empty');
+  var list=document.getElementById('cust-order-list');
+  if(!custOrders.length){empty.style.display='block';list.innerHTML='';return;}
+  empty.style.display='none';
+  var html='';
+  custOrders.slice().reverse().forEach(function(o){
+    var isCancelled=o.status==='cancelled';
+    var tags=o.items.map(function(i){return '<span class="order-item-tag">'+i.name+' ×'+i.qty+'</span>';}).join('');
+    html+='<div class="order-item-card'+(isCancelled?' cancelled':'')+'">'
+      +'<div class="order-item-header">'
+      +'<span class="order-item-num">주문 #'+o.orderSeq+'</span>'
+      +'<span style="font-size:11px;padding:2px 7px;border-radius:20px;font-weight:700;background:'+(isCancelled?'var(--red-bg)':'var(--green-bg)')+';color:'+(isCancelled?'var(--red-text)':'var(--green-text)')+';">'+(isCancelled?'취소됨':'유효')+'</span>'
+      +'<span class="order-item-total">'+o.total.toLocaleString()+'원</span>'
+      +'</div>'
+      +'<div class="order-item-detail">'+tags+'<br>'+o.payLabel+' · '+o.recvLabel+' · 입금 '+o.paidLabel+'<br>'
+      +'<span style="font-size:11px;color:var(--text3);">'+o.time+'</span></div>';
+    if(!isCancelled){
+      html+='<div class="order-item-actions">'
+        +'<div class="action-btn" onclick="showOrderEntry(\''+o.id+'\')">수정</div>'
+        +'<div class="action-btn danger" onclick="cancelOrder(\''+o.id+'\')">취소</div>'
+        +'</div>';
+    }
+    html+='</div>';
+  });
+  list.innerHTML=html;
+}
+
+// ── 주문 입력 화면 ────────────────────────────────────────────────────
+function showOrderEntry(orderId){
+  editingOrderId=orderId;
+  adminQty={};
   segState={pay:{key:'card',label:'카드'},recv:{key:'delivery',label:'택배배송'},paid:{key:'o',label:'O'}};
   ['pay-card','pay-transfer','pay-cash','recv-delivery','recv-pickup','recv-gallery','paid-o','paid-x'].forEach(function(bid){
     var el=document.getElementById(bid); if(el) el.classList.remove('active');
@@ -391,40 +458,23 @@ function selectCustomer(id){
   document.getElementById('recv-delivery').classList.add('active');
   document.getElementById('paid-o').classList.add('active');
 
-  var c=customers.find(function(x){return x.id===id;});
-  var order=orders.find(function(o){return o.customerId===id;});
-  if(order&&order.items) order.items.forEach(function(i){adminQty[i.productId]=i.qty;});
-  if(order&&order.payMethod)  setSeg('pay',  order.payMethod,  order.payLabel);
-  if(order&&order.recvMethod) setSeg('recv', order.recvMethod, order.recvLabel);
-  if(order&&order.paid)       setSeg('paid', order.paid,       order.paidLabel);
-
+  var c=customers.find(function(x){return x.id===selectedCustId;});
   var addrFull=(c.zip?'['+c.zip+'] ':'')+c.addr+(c.detail?' '+c.detail:'');
-  document.getElementById('cust-summary').innerHTML=
-    '<div class="s-name">'+c.name+'</div>'
-    +'<div class="s-detail">'+c.phone+'<br>'+addrFull+(c.memo?'<br>요청: '+c.memo:'')+'</div>';
+  document.getElementById('entry-cust-summary').innerHTML='<div class="s-name">'+c.name+'</div><div class="s-detail">'+c.phone+'<br>'+addrFull+'</div>';
 
-  var statusBar=document.getElementById('order-status-bar');
-  var cancelBtn=document.getElementById('cancel-btn');
-  if(order&&order.status==='ordered'){
-    statusBar.innerHTML='<div class="order-status-bar existing">기존 주문 불러옴 — 수정 후 저장하면 이력이 남습니다</div>';
-    cancelBtn.style.display='';
-  } else if(order&&order.status==='cancelled'){
-    statusBar.innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 새 주문으로 등록됩니다</div>';
-    cancelBtn.style.display='none';
+  var modeBar=document.getElementById('edit-mode-bar');
+  if(orderId){
+    var o=orders.find(function(x){return x.id===orderId;});
+    if(o&&o.items) o.items.forEach(function(i){adminQty[i.productId]=i.qty;});
+    if(o) { setSeg('pay',o.payMethod,o.payLabel); setSeg('recv',o.recvMethod,o.recvLabel); setSeg('paid',o.paid,o.paidLabel); }
+    modeBar.innerHTML='<div style="background:var(--warn-bg);color:var(--warn-text);border-radius:var(--radius);padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:12px;text-align:center;">주문 #'+o.orderSeq+' 수정 중</div>';
   } else {
-    statusBar.innerHTML=''; cancelBtn.style.display='none';
+    modeBar.innerHTML='';
   }
 
-  document.getElementById('admin-customer-list').style.display='none';
-  document.getElementById('admin-order-entry').style.display='';
   document.getElementById('admin-sync').textContent='';
+  showView('order-entry');
   renderAdminProducts();
-}
-
-function backToList(){
-  document.getElementById('admin-customer-list').style.display='';
-  document.getElementById('admin-order-entry').style.display='none';
-  selectedCustId=null; adminQty={};
 }
 
 // ── 상품 선택 ─────────────────────────────────────────────────────────
@@ -463,11 +513,17 @@ async function saveOrder(){
 
   var c=customers.find(function(x){return x.id===selectedCustId;});
   var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'-').replace(/-$/,'');
-  var ei=orders.findIndex(function(o){return o.customerId===selectedCustId;});
-  var isEdit = ei>=0 && orders[ei].status==='ordered'; // 기존 주문이 있으면 수정
+  var isEdit=!!editingOrderId;
+  var bigo = isEdit ? '주문수정' : '신규주문';
+
+  // 수정인 경우 기존 주문 시퀀스 유지
+  var custOrders=orders.filter(function(o){return o.customerId===selectedCustId;});
+  var seq = isEdit
+    ? orders.find(function(o){return o.id===editingOrderId;}).orderSeq
+    : custOrders.length+1;
 
   var order={
-    id: ei>=0 ? orders[ei].id : Date.now(),
+    id: isEdit ? editingOrderId : Date.now(),
     customerId:selectedCustId,
     customerName:c.name, customerPhone:c.phone,
     customerZip:c.zip, customerAddr:c.addr, customerDetail:c.detail,
@@ -477,15 +533,17 @@ async function saveOrder(){
     payMethod:segState.pay.key, payLabel:segState.pay.label,
     recvMethod:segState.recv.key, recvLabel:segState.recv.label,
     paid:segState.paid.key, paidLabel:segState.paid.label,
-    orderDate:today,
-    time:new Date().toLocaleString('ko-KR'),
-    status:'ordered', synced:false,
-    isEdit:isEdit,
-    // 수정 시 이전 주문 스냅샷 저장
-    prevItems: isEdit ? orders[ei].items : null
+    orderDate:today, time:new Date().toLocaleString('ko-KR'),
+    status:'active', orderSeq:seq, bigo:bigo
   };
 
-  if(ei>=0){orders[ei]=order;}else{orders.push(order);}
+  // 로컬 저장
+  if(isEdit){
+    var ei=orders.findIndex(function(o){return o.id===editingOrderId;});
+    if(ei>=0) orders[ei]=order;
+  } else {
+    orders.push(order);
+  }
   save('cv_orders',orders);
 
   var btn=document.getElementById('save-btn'); var st=document.getElementById('admin-sync');
@@ -494,44 +552,43 @@ async function saveOrder(){
     st.innerHTML='<span class="spinner"></span> 구글 시트에 저장 중...';
     try{
       await post({type:'order', data:order});
-      order.synced=true; save('cv_orders',orders);
       st.textContent='✓ 저장 완료 — '+c.name+'님 '+total.toLocaleString()+'원';
     }catch(e){st.textContent='⚠ 시트 저장 실패 (로컬에는 저장됨)';}
   }else{
-    st.textContent='✓ 저장됨 (Apps Script 미설정 — 로컬만)';
+    st.textContent='✓ 저장됨 (Apps Script 미설정)';
   }
   btn.disabled=false;
-  document.getElementById('cancel-btn').style.display='';
-  document.getElementById('order-status-bar').innerHTML='<div class="order-status-bar existing">주문 저장 완료</div>';
-  renderCustomerList();
+
+  setTimeout(function(){ showView('order-list'); }, 1200);
 }
 
 // ── 주문 취소 ─────────────────────────────────────────────────────────
-async function cancelOrder(){
-  if(!confirm('주문을 취소할까요? 시트에 취소 이력이 남습니다.'))return;
-  var ei=orders.findIndex(function(o){return o.customerId===selectedCustId;});
-  if(ei<0)return;
+async function cancelOrder(orderId){
+  if(!confirm('이 주문을 취소할까요?'))return;
   var c=customers.find(function(x){return x.id===selectedCustId;});
-  var cancelledOrder=orders[ei];
-  cancelledOrder.status='cancelled'; save('cv_orders',orders);
+  var ei=orders.findIndex(function(o){return o.id===orderId;});
+  if(ei<0)return;
+  var o=orders[ei];
+  o.status='cancelled'; o.bigo='주문취소';
+  save('cv_orders',orders);
 
-  var st=document.getElementById('admin-sync');
   if(scriptUrl){
-    st.innerHTML='<span class="spinner"></span> 취소 처리 중...';
     try{
-      await post({type:'cancel', data:{customerName:c.name, customerPhone:c.phone, time:new Date().toLocaleString('ko-KR')}});
-      st.textContent='✓ 취소 완료';
-    }catch(e){st.textContent='취소됨 (시트 반영 실패)';}
-  }else{ st.textContent='✓ 취소됨 (로컬)'; }
-
-  document.getElementById('cancel-btn').style.display='none';
-  document.getElementById('order-status-bar').innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 새 주문으로 등록됩니다</div>';
-  renderCustomerList();
+      await post({type:'cancel', data:{
+        customerName:c.name, customerPhone:c.phone,
+        orderSeq:o.orderSeq, itemStr:o.itemStr, total:o.total,
+        orderDate:o.orderDate, payLabel:o.payLabel, recvLabel:o.recvLabel,
+        paidLabel:o.paidLabel, customerAddr:c.addr, customerDetail:c.detail,
+        customerZip:c.zip, items:o.items, time:new Date().toLocaleString('ko-KR')
+      }});
+    }catch(e){}
+  }
+  renderCustOrderList();
 }
 
 // ── 통계 & 목록 ───────────────────────────────────────────────────────
 function updateStats(){
-  var active=orders.filter(function(o){return o.status==='ordered';});
+  var active=orders.filter(function(o){return o.status==='active';});
   document.getElementById('s-customers').textContent=customers.length;
   document.getElementById('s-ordered').textContent=active.length;
   document.getElementById('s-qty').textContent=active.reduce(function(s,o){return s+o.totalQty;},0);
@@ -541,7 +598,7 @@ function updateStats(){
 
 function renderOrderList(){
   var list=document.getElementById('order-list'); var empty=document.getElementById('order-empty');
-  var active=orders.filter(function(o){return o.status==='ordered';});
+  var active=orders.filter(function(o){return o.status==='active';});
   if(!active.length){empty.style.display='block';list.innerHTML='';return;}
   empty.style.display='none';
   var html='';
@@ -550,11 +607,10 @@ function renderOrderList(){
     var tags=o.items.map(function(i){return '<span class="order-item-tag">'+i.name+' ×'+i.qty+'</span>';}).join('');
     html+='<div style="background:var(--bg);border-radius:var(--radius-lg);border:0.5px solid var(--border);padding:14px 16px;margin-bottom:10px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-      +'<span style="font-size:16px;font-weight:700;">'+o.customerName+'</span>'
+      +'<span style="font-size:16px;font-weight:700;">'+o.customerName+' <span style="font-size:12px;color:var(--text2);">#'+o.orderSeq+'</span></span>'
       +'<span style="font-size:16px;font-weight:700;">'+o.total.toLocaleString()+'원</span></div>'
       +'<div style="margin-bottom:6px;">'+tags+'</div>'
-      +'<div style="font-size:13px;color:var(--text2);line-height:1.6;">'
-      +o.customerPhone+' · '+o.payLabel+' · '+o.recvLabel+'<br>'
+      +'<div style="font-size:13px;color:var(--text2);line-height:1.6;">'+o.customerPhone+' · '+o.payLabel+' · '+o.recvLabel+'<br>'
       +'<span style="font-size:12px;">'+addr+'</span></div>'
       +'<div style="font-size:11px;color:var(--text3);margin-top:6px;">'+o.time+'</div></div>';
   });
@@ -562,9 +618,9 @@ function renderOrderList(){
 }
 
 function exportCSV(){
-  var active=orders.filter(function(o){return o.status==='ordered';});
+  var active=orders.filter(function(o){return o.status==='active';});
   if(!active.length){alert('주문 데이터가 없습니다.');return;}
-  var rows=[['주문일','결제방법','입금','수령방법','주문번호','주문자','연락처','상품명','주문수','주문박스','주문금액','배송비','고객요청사항','배송여부','주소','상세주소','편번','운송장번호']];
+  var rows=[['주문일','결제방법','입금','수령방법','주문번호','주문자','연락처','상품명','주문수','주문박스','주문금액','배송비','고객요청사항','배송여부','주소','상세주소','편번','운송장번호','비고']];
   active.forEach(function(o){
     o.items.forEach(function(item){
       rows.push([
@@ -574,7 +630,8 @@ function exportCSV(){
         item.qty*item.price, '',
         o.customerMemo||'',
         recvToShipping[o.recvMethod]||'',
-        o.customerAddr||'', o.customerDetail||'', o.customerZip||'', ''
+        o.customerAddr||'', o.customerDetail||'', o.customerZip||'', '',
+        o.bigo||'신규주문'
       ]);
     });
   });
