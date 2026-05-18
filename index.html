@@ -121,13 +121,15 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 14px; }
 .order-item-tag { display: inline-block; background: var(--bg2); border-radius: 6px; padding: 2px 7px; font-size: 12px; color: var(--text2); margin: 2px 2px 2px 0; }
 .new-order-btn { width: 100%; padding: 13px; background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; text-align: center; }
+@media screen {
+  #print-area { display: none; }
+}
 @media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  #print-area { position: fixed; top: 0; left: 0; width: 80mm; }
+  body > *:not(#print-area) { display: none !important; }
+  #print-area { display: block !important; width: 80mm; margin: 0; padding: 0; }
+  @page { size: 80mm auto; margin: 0; }
 }
 .print-btn { width: 100%; padding: 13px; background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid var(--blue-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-#print-area { display: none; }
 </style>
 </head>
 <body>
