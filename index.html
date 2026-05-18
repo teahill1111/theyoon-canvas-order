@@ -691,7 +691,7 @@ function printReceipt(orderId){
   if(!o){alert('주문을 찾을 수 없습니다.');return;}
 
   var today=new Date().toLocaleDateString('ko-KR');
-  var eventName=localStorage.getItem('cv_event_name')||'아트페어';
+  var eventName=localStorage.getItem('cv_event_name')||'금보성아트센터';
 
   var itemRows='';
   o.items.forEach(function(item){
@@ -715,7 +715,8 @@ function printReceipt(orderId){
     +'<div class="center" style="font-size:11px;color:#666;margin-bottom:8px;">'+today+'</div>'
     +'<div class="dashed"></div>'
     +'<table><tbody>'+itemRows+'</tbody></table>'
-    +'<div class="dashed"></div>'
++'<div class="dashed"></div>'
+    +'<div style="font-size:12px;margin-bottom:4px;">결제수단: '+o.payLabel+'</div>'
     +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:bold;">'
     +'<span>합계 ('+o.totalQty+'개)</span><span>'+o.total.toLocaleString()+'원</span></div>'
     +'<div class="dashed"></div>'
