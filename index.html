@@ -458,7 +458,7 @@ function showOrderEntry(orderId){
   document.getElementById('recv-delivery').classList.add('active');
   document.getElementById('paid-o').classList.add('active');
 
-  var c=customers.find(function(x){return x.id===selectedCustId;});
+  var o=orders.find(function(x){return String(x.id)===String(orderId);});
   var addrFull=(c.zip?'['+c.zip+'] ':'')+c.addr+(c.detail?' '+c.detail:'');
   document.getElementById('entry-cust-summary').innerHTML='<div class="s-name">'+c.name+'</div><div class="s-detail">'+c.phone+'<br>'+addrFull+'</div>';
 
@@ -566,7 +566,7 @@ async function saveOrder(){
 async function cancelOrder(orderId){
   if(!confirm('이 주문을 취소할까요?'))return;
   var c=customers.find(function(x){return x.id===selectedCustId;});
-  var ei=orders.findIndex(function(o){return o.id===orderId;});
+  var ei=orders.findIndex(function(o){return String(o.id)===String(orderId);});
   if(ei<0)return;
   var o=orders[ei];
   o.status='cancelled'; o.bigo='주문취소';
