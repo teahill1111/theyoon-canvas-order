@@ -577,9 +577,13 @@ async function cancelOrder(orderId){
       await post({type:'cancel', data:{
         customerName:c.name, customerPhone:c.phone,
         orderSeq:o.orderSeq, itemStr:o.itemStr, total:o.total,
-        orderDate:o.orderDate, payLabel:o.payLabel, recvLabel:o.recvLabel,
-        paidLabel:o.paidLabel, customerAddr:c.addr, customerDetail:c.detail,
-        customerZip:c.zip, items:o.items, time:new Date().toLocaleString('ko-KR')
+        orderDate:o.orderDate,
+        payLabel:o.payLabel, recvLabel:o.recvLabel, recvMethod:o.recvMethod,
+        paidLabel:o.paidLabel,
+        customerAddr:o.customerAddr, customerDetail:o.customerDetail,
+        customerZip:o.customerZip,
+        customerMemo:o.customerMemo||'',
+        items:o.items, time:new Date().toLocaleString('ko-KR')
       }});
     }catch(e){}
   }
