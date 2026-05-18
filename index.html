@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>캔버스 주문서</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f7f7f5;
+    --bg3: #efefed;
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --green-bg: #eaf3de;
+    --green-text: #3b6d11;
+    --blue-bg: #e6f1fb;
+    --blue-text: #185fa5;
+    --warn-bg: #faeeda;
+    --warn-text: #854f0b;
+    --danger-bg: #fcebeb;
+    --danger-text: #a32d2d;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --bg2: #2c2c2e;
+      --bg3: #3a3a3c;
+      --text: #f2f2f7;
+      --text2: #aeaeb2;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --green-bg: #173404;
+      --green-text: #c0dd97;
+      --blue-bg: #042c53;
+      --blue-text: #85b7eb;
+      --warn-bg: #412402;
+      --warn-text: #fac775;
+      --danger-bg: #501313;
+      --danger-text: #f09595;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    background: var(--bg2);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .header {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 { font-size: 17px; font-weight: 600; }
+  .header .subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .tabs {
+    display: flex;
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 4px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+    user-select: none;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .content { padding: 20px 16px; max-width: 520px; margin: 0 auto; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin: 20px 0 10px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  .card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .field { padding: 0 16px 14px; }
+  .field:first-child { padding-top: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+
+  input[type=text], input[type=tel], input[type=number], input[type=email], textarea, select {
+    width: 100%;
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 13px;
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--border2); }
+  input::placeholder, textarea::placeholder { color: var(--text2); }
+
+  .toggle-wrap { display: flex; gap: 8px; }
+  .toggle-btn {
+    flex: 1;
+    padding: 12px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg2);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: all .15s;
+    user-select: none;
+  }
+  .toggle-btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .addr-row { display: flex; gap: 8px; }
+  .addr-row input { flex: 1; }
+  .addr-btn {
+    flex-shrink: 0;
+    padding: 0 14px;
+    height: 46px;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .addr-zip { width: 100px !important; flex-shrink: 0; }
+
+  .product-item {
+    display: flex;
+    align-items: center;
+    padding: 13px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .product-item:last-child { border-bottom: none; }
+  .product-info { flex: 1; }
+  .product-name { font-size: 15px; font-weight: 500; }
+  .product-price { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .qty-wrap { display: flex; align-items: center; gap: 10px; }
+  .qty-btn {
+    width: 32px; height: 32px;
+    border: 0.5px solid var(--border2);
+    border-radius: 50%;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .1s;
+    flex-shrink: 0;
+  }
+  .qty-btn:active { background: var(--bg3); }
+  .qty-val { font-size: 16px; font-weight: 600; min-width: 20px; text-align: center; }
+  .qty-val.zero { color: var(--text2); font-weight: 400; }
+
+  .summary-card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; color: var(--text2); }
+  .summary-row:last-child { margin-bottom: 0; }
+  .summary-total { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 0.5px solid var(--border); margin-top: 8px; }
+  .summary-total .label { font-size: 15px; font-weight: 500; }
+  .summary-total .amount { font-size: 22px; font-weight: 700; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+    margin-bottom: 32px;
+  }
+  .submit-btn:active { opacity: .8; }
+  .submit-btn:disabled { opacity: .35; cursor: default; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-delivery { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-pickup { background: var(--green-bg); color: var(--green-text); }
+  .badge-synced { background: var(--green-bg); color: var(--green-text); }
+  .badge-local { background: var(--bg3); color: var(--text2); }
+
+  .success-wrap {
+    display: none;
+    text-align: center;
+    padding: 3rem 1rem 4rem;
+  }
+  .success-circle {
+    width: 64px; height: 64px;
+    background: var(--green-bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 28px;
+    color: var(--green-text);
+  }
+  .success-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--text2); line-height: 1.6; }
+  .success-sheet { font-size: 13px; margin-top: 10px; color: var(--text2); min-height: 20px; }
+  .new-order-btn {
+    margin-top: 2rem;
+    display: inline-block;
+    padding: 13px 32px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* 관리자 */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px 16px; }
+  .stat-card .s-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .stat-card .s-val { font-size: 24px; font-weight: 700; }
+
+  .filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .filter-row select { flex: 1; font-size: 14px; padding: 9px 10px; }
+  .filter-row input { flex: 2; font-size: 14px; padding: 9px 10px; }
+
+  .order-card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .order-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .order-num { font-size: 12px; color: var(--text2); }
+  .order-name { font-size: 16px; font-weight: 600; flex: 1; }
+  .order-amount { font-size: 16px; font-weight: 700; }
+  .order-meta { font-size: 13px; color: var(--text2); line-height: 1.7; }
+  .order-addr { font-size: 13px; color: var(--text); margin-top: 6px; line-height: 1.5; word-break: break-all; }
+
+  .export-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--bg);
+    color: var(--text);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-lg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  .export-btn:active { background: var(--bg2); }
+
+  /* 설정 */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .setting-row input[type=text] { flex: 1; font-size: 14px; }
+  .setting-row input[type=number] { width: 90px; flex-shrink: 0; font-size: 14px; }
+  .del-btn {
+    width: 32px; height: 32px; flex-shrink: 0;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .add-btn {
+    padding: 10px 16px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .url-banner {
+    background: var(--warn-bg);
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .url-banner .title { font-weight: 600; color: var(--warn-text); margin-bottom: 6px; }
+  .url-banner .desc { color: var(--warn-text); line-height: 1.5; margin-bottom: 10px; }
+  .url-row { display: flex; gap: 8px; }
+  .url-row input { flex: 1; font-size: 13px; padding: 9px 11px; }
+  .url-save-btn {
+    flex-shrink: 0;
+    padding: 0 14px;
+    height: 42px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .info-box {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .info-box p { margin-bottom: 4px; }
+  .info-box p:last-child { margin-bottom: 0; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--text2);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .spinner { border-color: rgba(255,255,255,0.1); border-top-color: var(--text2); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>캔버스 주문서</h1>
+  <div class="subtitle" id="header-subtitle">아트페어 현장 주문</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('order')">주문 접수</div>
+  <div class="tab" onclick="switchTab('admin')">관리자</div>
+  <div class="tab" onclick="switchTab('settings')">설정</div>
+</div>
+
+<!-- 주문 탭 -->
+<div id="tab-order" class="panel active">
+  <div class="content">
+    <div id="order-form">
+      <div class="section-title">주문 유형</div>
+      <div class="toggle-wrap" style="margin-bottom:20px;">
+        <div class="toggle-btn active" id="btn-delivery" onclick="setType('delivery')">📦 배송 주문</div>
+        <div class="toggle-btn" id="btn-pickup" onclick="setType('pickup')">🏪 현장 수령</div>
+      </div>
+
+      <div class="section-title">고객 정보</div>
+      <div class="card">
+        <div class="field">
+          <label>이름</label>
+          <input type="text" id="cust-name" placeholder="홍길동" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>연락처</label>
+          <input type="tel" id="cust-phone" placeholder="010-0000-0000" autocomplete="tel">
+        </div>
+      </div>
+
+      <div id="addr-section">
+        <div class="section-title">배송 주소</div>
+        <div class="card">
+          <div class="field">
+            <label>주소 검색</label>
+            <div class="addr-row" style="margin-bottom:8px;">
+              <input type="text" id="addr-zip" class="addr-zip" placeholder="우편번호" readonly>
+              <button class="addr-btn" onclick="searchAddr()">주소 검색</button>
+            </div>
+            <input type="text" id="addr-main" placeholder="도로명 주소" readonly style="margin-bottom:8px;">
+            <input type="text" id="addr-detail" placeholder="상세 주소 (동/호수 입력)">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">주문 상품</div>
+      <div class="card" id="product-list"></div>
+
+      <div class="summary-card">
+        <div id="summary-items"></div>
+        <div class="summary-total">
+          <span class="label">총 결제 금액</span>
+          <span class="amount" id="total-amount">0원</span>
+        </div>
+      </div>
+
+      <div class="section-title">메모</div>
+      <div class="card">
+        <div class="field">
+          <textarea id="order-memo" rows="2" placeholder="특이사항 (선택)"></textarea>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitOrder()">주문 접수하기</button>
+    </div>
+
+    <div class="success-wrap" id="success-wrap">
+      <div class="success-circle">✓</div>
+      <div class="success-title">주문 완료!</div>
+      <div class="success-sub" id="success-sub"></div>
+      <div class="success-sheet" id="success-sheet"></div>
+      <button class="new-order-btn" onclick="resetForm()">새 주문 입력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 탭 -->
+<div id="tab-admin" class="panel">
+  <div class="content">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="s-label">전체 주문</div><div class="s-val" id="stat-total">0</div></div>
+      <div class="stat-card"><div class="s-label">총 매출</div><div class="s-val" id="stat-revenue">0</div></div>
+      <div class="stat-card"><div class="s-label">배송 주문</div><div class="s-val" id="stat-delivery">0</div></div>
+      <div class="stat-card"><div class="s-label">현장 수령</div><div class="s-val" id="stat-pickup">0</div></div>
+    </div>
+
+    <div class="filter-row">
+      <select id="filter-type" onchange="renderAdmin()">
+        <option value="">전체</option>
+        <option value="delivery">배송</option>
+        <option value="pickup">현장수령</option>
+      </select>
+      <input type="text" id="filter-search" placeholder="이름·연락처 검색" oninput="renderAdmin()">
+    </div>
+
+    <button class="export-btn" onclick="exportCSV()">CSV 내보내기 (엑셀용)</button>
+
+    <div id="admin-list"></div>
+    <div id="empty-state" class="empty-state" style="display:none;">아직 주문이 없습니다.</div>
+  </div>
+</div>
+
+<!-- 설정 탭 -->
+<div id="tab-settings" class="panel">
+  <div class="content">
+
+    <div class="section-title">Google Apps Script 연동</div>
+    <div id="url-banner" class="url-banner">
+      <div class="title">⚠ Apps Script URL 미설정</div>
+      <div class="desc">배포 후 받은 웹앱 URL을 입력하면<br>주문이 구글 시트에 자동 저장됩니다.</div>
+      <div class="url-row">
+        <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+        <button class="url-save-btn" onclick="saveScriptUrl()">저장</button>
+      </div>
+    </div>
+    <div id="url-connected" style="display:none;">
+      <div class="info-box">
+        <p>✅ 구글 시트 연동 활성화됨</p>
+        <p id="url-display" style="font-size:11px;word-break:break-all;color:var(--text2);"></p>
+        <p style="margin-top:8px;"><button onclick="disconnectUrl()" style="font-size:12px;color:var(--danger-text);background:none;border:none;cursor:pointer;padding:0;">연동 해제</button></p>
+      </div>
+    </div>
+
+    <div class="section-title">상품 목록 관리</div>
+    <div class="info-box"><p>상품 이름과 가격을 수정하면 주문 폼에 바로 반영됩니다.</p></div>
+    <div id="product-editor"></div>
+    <button class="add-btn" onclick="addProduct()">+ 상품 추가</button>
+
+    <div class="section-title" style="margin-top:24px;">행사 이름</div>
+    <div class="card">
+      <div class="field">
+        <label>헤더에 표시될 부제목</label>
+        <input type="text" id="event-name-input" placeholder="아트페어 현장 주문" oninput="updateEventName()">
+      </div>
+    </div>
+
+    <div style="height:40px;"></div>
+  </div>
+</div>
+
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+// ── 상태 ──────────────────────────────────────────────────────────────
+var orderType = 'delivery';
+var orders = JSON.parse(localStorage.getItem('canvas_orders') || '[]');
+var scriptUrl = localStorage.getItem('canvas_script_url') || '';
+var products = JSON.parse(localStorage.getItem('canvas_products') || 'null') || [
+  {id:1,name:'캔버스 10호',price:25000},{id:2,name:'캔버스 12호',price:30000},
+  {id:3,name:'캔버스 15호',price:38000},{id:4,name:'캔버스 20호',price:48000},
+  {id:5,name:'캔버스 25호',price:58000},{id:6,name:'캔버스 30호',price:68000},
+  {id:7,name:'캔버스 40호',price:88000},{id:8,name:'캔버스 50호',price:110000},
+  {id:9,name:'캔버스 60호',price:138000},{id:10,name:'캔버스 80호',price:175000},
+  {id:11,name:'캔버스 100호',price:220000}
+];
+var qty = {};
+
+// ── 초기화 ────────────────────────────────────────────────────────────
+(function init() {
+  if (scriptUrl) showConnected();
+  var evName = localStorage.getItem('canvas_event_name') || '';
+  if (evName) {
+    document.getElementById('header-subtitle').textContent = evName;
+    document.getElementById('event-name-input').value = evName;
+  }
+  renderProducts();
+  setType('delivery');
+})();
+
+// ── 탭 ───────────────────────────────────────────────────────────────
+function switchTab(name) {
+  var tabs = ['order','admin','settings'];
+  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', tabs[i]===name); });
+  document.querySelectorAll('.panel').forEach(function(p,i){ p.classList.toggle('active', 'tab-'+tabs[i]==='tab-'+name); });
+  if (name==='admin') { updateStats(); renderAdmin(); }
+  if (name==='settings') renderEditor();
+}
+
+// ── 주문 유형 ─────────────────────────────────────────────────────────
+function setType(type) {
+  orderType = type;
+  document.getElementById('btn-delivery').classList.toggle('active', type==='delivery');
+  document.getElementById('btn-pickup').classList.toggle('active', type==='pickup');
+  document.getElementById('addr-section').style.display = type==='delivery' ? '' : 'none';
+}
+
+// ── 상품 렌더링 ───────────────────────────────────────────────────────
+function renderProducts() {
+  var html = '';
+  products.forEach(function(p) {
+    var q = qty[p.id] || 0;
+    html += '<div class="product-item">'
+      + '<div class="product-info">'
+      + '<div class="product-name">' + p.name + '</div>'
+      + '<div class="product-price">' + p.price.toLocaleString() + '원</div>'
+      + '</div>'
+      + '<div class="qty-wrap">'
+      + '<button class="qty-btn" onclick="changeQty(' + p.id + ',-1)">−</button>'
+      + '<span class="qty-val' + (q===0?' zero':'') + '" id="qty-' + p.id + '">' + q + '</span>'
+      + '<button class="qty-btn" onclick="changeQty(' + p.id + ',1)">+</button>'
+      + '</div></div>';
+  });
+  document.getElementById('product-list').innerHTML = html;
+  updateTotal();
+}
+
+function changeQty(id, delta) {
+  qty[id] = Math.max(0, (qty[id] || 0) + delta);
+  var el = document.getElementById('qty-' + id);
+  if (el) { el.textContent = qty[id]; el.className = 'qty-val' + (qty[id]===0?' zero':''); }
+  updateTotal();
+}
+
+function updateTotal() {
+  var total = 0;
+  var summaryHtml = '';
+  var hasItems = false;
+  products.forEach(function(p) {
+    var q = qty[p.id] || 0;
+    if (q > 0) {
+      hasItems = true;
+      var sub = q * p.price;
+      total += sub;
+      summaryHtml += '<div class="summary-row"><span>' + p.name + ' × ' + q + '</span><span>' + sub.toLocaleString() + '원</span></div>';
+    }
+  });
+  document.getElementById('summary-items').innerHTML = summaryHtml;
+  document.getElementById('total-amount').textContent = total.toLocaleString() + '원';
+}
+
+// ── 주소 검색 ─────────────────────────────────────────────────────────
+function searchAddr() {
+  new daum.Postcode({
+    oncomplete: function(data) {
+      document.getElementById('addr-zip').value = data.zonecode;
+      document.getElementById('addr-main').value = data.roadAddress || data.jibunAddress;
+      document.getElementById('addr-detail').focus();
+    }
+  }).open();
+}
+
+// ── 주문 제출 ─────────────────────────────────────────────────────────
+async function submitOrder() {
+  var name = document.getElementById('cust-name').value.trim();
+  var phone = document.getElementById('cust-phone').value.trim();
+  if (!name || !phone) { alert('이름과 연락처를 입력해 주세요.'); return; }
+
+  var items = []; var totalQty = 0;
+  products.forEach(function(p) {
+    if ((qty[p.id] || 0) > 0) { items.push({name:p.name,qty:qty[p.id],price:p.price}); totalQty += qty[p.id]; }
+  });
+  if (!items.length) { alert('주문할 상품을 선택해 주세요.'); return; }
+
+  var total = items.reduce(function(s,i){ return s+i.qty*i.price; }, 0);
+  var order = {
+    id: orders.length + 1,
+    type: orderType,
+    name: name, phone: phone,
+    items: items, total: total, totalQty: totalQty,
+    itemStr: items.map(function(i){return i.name+'×'+i.qty;}).join(' / '),
+    memo: document.getElementById('order-memo').value.trim(),
+    time: new Date().toLocaleString('ko-KR'),
+    sheetSynced: false
+  };
+
+  if (orderType === 'delivery') {
+    var addr = document.getElementById('addr-main').value.trim();
+    if (!addr) { alert('주소를 검색해 주세요.'); return; }
+    order.zip = document.getElementById('addr-zip').value.trim();
+    order.addr = addr;
+    order.addrDetail = document.getElementById('addr-detail').value.trim();
+  }
+
+  orders.push(order);
+  localStorage.setItem('canvas_orders', JSON.stringify(orders));
+
+  document.getElementById('order-form').style.display = 'none';
+  document.getElementById('success-wrap').style.display = 'block';
+  document.getElementById('success-sub').textContent = name + '님 · ' + total.toLocaleString() + '원 · ' + (orderType==='delivery' ? '배송' : '현장 수령');
+
+  var sheetEl = document.getElementById('success-sheet');
+  if (scriptUrl) {
+    sheetEl.innerHTML = '<span class="spinner"></span> 구글 시트에 저장 중...';
+    try {
+      await fetch(scriptUrl, {method:'POST', body:JSON.stringify(order), mode:'no-cors'});
+      order.sheetSynced = true;
+      localStorage.setItem('canvas_orders', JSON.stringify(orders));
+      sheetEl.textContent = '✓ 구글 시트 저장 완료';
+    } catch(e) {
+      sheetEl.textContent = '⚠ 시트 저장 실패 (로컬에는 저장됨)';
+    }
+  } else {
+    sheetEl.textContent = '※ Apps Script 미설정 — 기기에만 저장됨';
+  }
+}
+
+function resetForm() {
+  qty = {};
+  ['cust-name','cust-phone','addr-zip','addr-main','addr-detail','order-memo'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('order-form').style.display = '';
+  document.getElementById('success-wrap').style.display = 'none';
+  renderProducts();
+}
+
+// ── 관리자 ────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-total').textContent = orders.length;
+  document.getElementById('stat-delivery').textContent = orders.filter(function(o){return o.type==='delivery';}).length;
+  document.getElementById('stat-pickup').textContent = orders.filter(function(o){return o.type==='pickup';}).length;
+  var rev = orders.reduce(function(s,o){return s+o.total;},0);
+  document.getElementById('stat-revenue').textContent = rev.toLocaleString() + '원';
+}
+
+function renderAdmin() {
+  var ft = document.getElementById('filter-type').value;
+  var fs = (document.getElementById('filter-search').value || '').toLowerCase();
+  var filtered = orders.filter(function(o) {
+    if (ft && o.type !== ft) return false;
+    if (fs && !(o.name.toLowerCase().includes(fs) || o.phone.includes(fs))) return false;
+    return true;
+  });
+  updateStats();
+  var empty = document.getElementById('empty-state');
+  var list = document.getElementById('admin-list');
+  if (!filtered.length) { empty.style.display='block'; list.innerHTML=''; return; }
+  empty.style.display = 'none';
+  var html = '';
+  filtered.slice().reverse().forEach(function(o) {
+    var addrLine = o.type==='delivery' ? '[' + (o.zip||'') + '] ' + (o.addr||'') + (o.addrDetail?' '+o.addrDetail:'') : '현장 수령';
+    var syncBadge = o.sheetSynced ? '<span class="badge badge-synced">시트 저장</span>' : '<span class="badge badge-local">로컬</span>';
+    html += '<div class="order-card">'
+      + '<div class="order-card-header">'
+      + '<span class="order-num">#' + o.id + '</span>'
+      + '<span class="badge ' + (o.type==='delivery'?'badge-delivery':'badge-pickup') + '">' + (o.type==='delivery'?'배송':'현장') + '</span>'
+      + syncBadge
+      + '<span style="flex:1;"></span>'
+      + '<span class="order-amount">' + o.total.toLocaleString() + '원</span>'
+      + '</div>'
+      + '<div class="order-meta">'
+      + '<strong style="font-size:15px;">' + o.name + '</strong> · ' + o.phone + '<br>'
+      + o.itemStr + ' · 총 ' + o.totalQty + '개'
+      + (o.memo ? '<br>메모: ' + o.memo : '')
+      + '</div>'
+      + (o.type==='delivery' ? '<div class="order-addr">' + addrLine + '</div>' : '')
+      + '<div style="font-size:11px;color:var(--text2);margin-top:6px;">' + o.time + '</div>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function exportCSV() {
+  if (!orders.length) { alert('주문 데이터가 없습니다.'); return; }
+  var rows = [['번호','접수시각','유형','이름','연락처','우편번호','도로명주소','상세주소','주문내역','수량합계','금액합계','메모','시트저장']];
+  orders.forEach(function(o) {
+    rows.push([o.id, o.time, o.type==='delivery'?'배송':'현장수령', o.name, o.phone,
+      o.zip||'', o.addr||'', o.addrDetail||'', o.itemStr, o.totalQty, o.total, o.memo||'', o.sheetSynced?'Y':'N']);
+  });
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"'+(c+'').replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '캔버스주문_' + new Date().toLocaleDateString('ko-KR').replace(/\.\s?/g,'-').replace(/-$/,'') + '.csv';
+  a.click();
+}
+
+// ── 설정 ─────────────────────────────────────────────────────────────
+function saveScriptUrl() {
+  var val = document.getElementById('script-url-input').value.trim();
+  if (!val || !val.startsWith('https://script.google.com')) { alert('올바른 Apps Script URL을 입력해 주세요.'); return; }
+  scriptUrl = val;
+  localStorage.setItem('canvas_script_url', val);
+  showConnected();
+}
+
+function showConnected() {
+  document.getElementById('url-banner').style.display = 'none';
+  document.getElementById('url-connected').style.display = 'block';
+  document.getElementById('url-display').textContent = scriptUrl;
+}
+
+function disconnectUrl() {
+  if (!confirm('연동을 해제할까요?')) return;
+  scriptUrl = '';
+  localStorage.removeItem('canvas_script_url');
+  document.getElementById('url-banner').style.display = 'block';
+  document.getElementById('url-connected').style.display = 'none';
+  document.getElementById('script-url-input').value = '';
+}
+
+function renderEditor() {
+  var html = '';
+  products.forEach(function(p, i) {
+    html += '<div class="setting-row">'
+      + '<input type="text" value="' + p.name + '" oninput="products['+i+'].name=this.value;saveProducts();renderProducts();">'
+      + '<input type="number" value="' + p.price + '" min="0" step="1000" oninput="products['+i+'].price=parseInt(this.value)||0;saveProducts();renderProducts();">'
+      + '<span style="font-size:13px;color:var(--text2);flex-shrink:0;">원</span>'
+      + '<button class="del-btn" onclick="removeProduct('+i+')">×</button>'
+      + '</div>';
+  });
+  document.getElementById('product-editor').innerHTML = html;
+}
+
+function addProduct() {
+  products.push({id: Date.now(), name:'새 상품', price:0});
+  saveProducts(); renderEditor(); renderProducts();
+}
+
+function removeProduct(i) {
+  products.splice(i, 1);
+  saveProducts(); renderEditor(); renderProducts();
+}
+
+function saveProducts() {
+  localStorage.setItem('canvas_products', JSON.stringify(products));
+}
+
+function updateEventName() {
+  var val = document.getElementById('event-name-input').value;
+  document.getElementById('header-subtitle').textContent = val || '아트페어 현장 주문';
+  localStorage.setItem('canvas_event_name', val);
+}
+</script>
+</body>
+</html>
