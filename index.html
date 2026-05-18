@@ -121,6 +121,13 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 14px; }
 .order-item-tag { display: inline-block; background: var(--bg2); border-radius: 6px; padding: 2px 7px; font-size: 12px; color: var(--text2); margin: 2px 2px 2px 0; }
 .new-order-btn { width: 100%; padding: 13px; background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; text-align: center; }
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: fixed; top: 0; left: 0; width: 80mm; }
+}
+.print-btn { width: 100%; padding: 13px; background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid var(--blue-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+#print-area { display: none; }
 </style>
 </head>
 <body>
@@ -423,7 +430,7 @@ function renderCustOrderList(){
   var list=document.getElementById('cust-order-list');
   if(!custOrders.length){empty.style.display='block';list.innerHTML='';return;}
   empty.style.display='none';
-  var html='';
+  var html='<div class="print-btn" onclick="printReceipt()">영수증 인쇄</div>';
   custOrders.slice().reverse().forEach(function(o){
     var isCancelled=o.status==='cancelled';
     var tags=o.items.map(function(i){return '<span class="order-item-tag">'+i.name+' ×'+i.qty+'</span>';}).join('');
@@ -675,8 +682,42 @@ function removeProduct(i){products.splice(i,1);saveProducts();renderEditor();}
 function saveProducts(){save('cv_products',products);}
 function updateEventName(){var val=document.getElementById('event-name-input').value;document.getElementById('header-sub').textContent=val||'아트페어 현장 주문';localStorage.setItem('cv_event_name',val);}
 function clearAll(){if(!confirm('모든 고객·주문 데이터를 삭제할까요?'))return;customers=[];orders=[];localStorage.removeItem('cv_customers');localStorage.removeItem('cv_orders');renderCustomerList();alert('초기화 완료');}
+function printReceipt(){
+  var activeOrders=orders.filter(function(o){return o.customerId===selectedCustId&&o.status==='active';});
+  if(!activeOrders.length){alert('유효한 주문이 없습니다.');return;}
+
+  var today=new Date().toLocaleDateString('ko-KR');
+  var total=activeOrders.reduce(function(s,o){return s+o.total;},0);
+  var totalQty=activeOrders.reduce(function(s,o){return s+o.totalQty;},0);
+
+  var itemRows='';
+  activeOrders.forEach(function(o){
+    o.items.forEach(function(item){
+      itemRows+='<tr>'
+        +'<td style="padding:3px 0;">'+item.name+' × '+item.qty+'</td>'
+        +'<td style="text-align:right;padding:3px 0;">'+(item.qty*item.price).toLocaleString()+'원</td>'
+        +'</tr>';
+    });
+  });
+
+  document.getElementById('print-area').innerHTML=
+    '<div style="width:72mm;font-family:monospace;font-size:12px;padding:4mm;">'
+    +'<div style="text-align:center;font-size:11px;color:#666;margin-bottom:8px;">'+today+'</div>'
+    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    +'<tbody>'+itemRows+'</tbody>'
+    +'</table>'
+    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:bold;">'
+    +'<span>합계 ('+totalQty+'개)</span><span>'+total.toLocaleString()+'원</span></div>'
+    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
+    +'</div>';
+
+  window.print();
+}
 function save(key,val){localStorage.setItem(key,JSON.stringify(val));}
 function post(data){return fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify(data)});}
 </script>
+<div id="print-area"></div>
 </body>
 </html>
