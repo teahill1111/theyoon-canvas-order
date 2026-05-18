@@ -39,9 +39,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-se
 .card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); overflow: hidden; margin-bottom: 12px; }
 .field { padding: 12px 16px; border-bottom: 0.5px solid var(--border); }
 .field:last-child { border-bottom: none; }
-.field label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; }
+.field label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 6px; }
 input[type=text], input[type=tel], textarea { width: 100%; background: transparent; border: none; outline: none; font-size: 16px; color: var(--text); padding: 0; resize: none; font-family: inherit; }
-select { width: 100%; background: transparent; border: none; outline: none; font-size: 16px; color: var(--text); padding: 0; font-family: inherit; -webkit-appearance: none; }
 input::placeholder, textarea::placeholder { color: var(--text3); }
 .addr-row { display: flex; gap: 8px; align-items: center; }
 .addr-btn { flex-shrink: 0; padding: 7px 12px; background: var(--bg2); border: 0.5px solid var(--border2); border-radius: var(--radius); font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; white-space: nowrap; }
@@ -88,7 +87,7 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 .total-final .lbl { font-size: 15px; font-weight: 600; }
 .total-final .amt { font-size: 22px; font-weight: 700; }
 .seg-wrap { display: flex; gap: 6px; }
-.seg-btn { flex: 1; padding: 9px 4px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text2); font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; transition: all .15s; }
+.seg-btn { flex: 1; padding: 9px 4px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text2); font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; transition: all .15s; white-space: nowrap; }
 .seg-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .stat-card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 14px 16px; }
@@ -170,7 +169,6 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     <div class="admin-tab" onclick="switchAdminTab('settings')">설정</div>
   </div>
 
-  <!-- 주문 입력 탭 -->
   <div id="atab-orders" class="content" style="padding-top:16px;">
     <div id="admin-customer-list">
       <div class="search-bar">
@@ -185,13 +183,13 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
       <div class="customer-summary" id="cust-summary"></div>
       <div id="order-status-bar"></div>
 
-      <!-- 결제방법 / 수령방법 / 입금 -->
       <div class="section-label">주문 정보</div>
       <div class="card">
         <div class="field">
           <label>결제방법</label>
           <div class="seg-wrap" style="margin-top:4px;">
             <div class="seg-btn active" id="pay-card" onclick="setSeg('pay','card','카드')">카드</div>
+            <div class="seg-btn" id="pay-transfer" onclick="setSeg('pay','transfer','계좌이체')">계좌이체</div>
             <div class="seg-btn" id="pay-cash" onclick="setSeg('pay','cash','현금')">현금</div>
           </div>
         </div>
@@ -199,7 +197,8 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
           <label>수령방법</label>
           <div class="seg-wrap" style="margin-top:4px;">
             <div class="seg-btn active" id="recv-delivery" onclick="setSeg('recv','delivery','택배배송')">택배배송</div>
-            <div class="seg-btn" id="recv-visit" onclick="setSeg('recv','visit','방문수령')">방문수령</div>
+            <div class="seg-btn" id="recv-pickup" onclick="setSeg('recv','pickup','현장수령')">현장수령</div>
+            <div class="seg-btn" id="recv-gallery" onclick="setSeg('recv','gallery','갤러리 방문')">갤러리 방문</div>
           </div>
         </div>
         <div class="field">
@@ -213,19 +212,16 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 
       <div class="section-label">주문 상품</div>
       <div class="card" id="admin-products"></div>
-
       <div class="total-bar">
         <div id="admin-total-rows"></div>
         <div class="total-final"><span class="lbl">총 결제 금액</span><span class="amt" id="admin-total">0원</span></div>
       </div>
-
       <button class="primary-btn" id="save-btn" onclick="saveOrder()">주문 저장</button>
       <button class="danger-btn" id="cancel-btn" onclick="cancelOrder()" style="display:none;">주문 취소</button>
       <div class="sync-status" id="admin-sync"></div>
     </div>
   </div>
 
-  <!-- 주문 목록 탭 -->
   <div id="atab-list" class="content" style="display:none;padding-top:16px;">
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-label">전체 고객</div><div class="stat-val" id="s-customers">0</div></div>
@@ -238,7 +234,6 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
     <div id="order-empty" class="empty-state" style="display:none;">주문 내역이 없습니다.</div>
   </div>
 
-  <!-- 설정 탭 -->
   <div id="atab-settings" class="content" style="display:none;padding-top:16px;">
     <div class="section-label">Google Apps Script 연동</div>
     <div id="url-banner" class="url-banner">
@@ -273,7 +268,11 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
 var isAdmin = false;
 var selectedCustId = null;
 var adminQty = {};
-var segState = { pay: {key:'card', label:'카드'}, recv: {key:'delivery', label:'택배배송'}, paid: {key:'o', label:'O'} };
+var segState = {
+  pay:  {key:'card',     label:'카드'},
+  recv: {key:'delivery', label:'택배배송'},
+  paid: {key:'o',        label:'O'}
+};
 
 var customers = JSON.parse(localStorage.getItem('cv_customers')||'[]');
 var orders    = JSON.parse(localStorage.getItem('cv_orders')||'[]');
@@ -286,6 +285,13 @@ var products  = JSON.parse(localStorage.getItem('cv_products')||'null')||[
   {id:9,name:'캔버스 60호',price:138000},{id:10,name:'캔버스 80호',price:175000},
   {id:11,name:'캔버스 100호',price:220000}
 ];
+
+// 수령방법 → 배송여부 값 매핑
+var recvToShipping = {
+  delivery: '배송전',
+  pickup:   '현장수령완료',
+  gallery:  '미수령'
+};
 
 (function init(){
   if(scriptUrl) showConnected();
@@ -314,11 +320,11 @@ function switchAdminTab(tab){
   if(tab==='settings') renderEditor();
 }
 
-// ── 세그먼트 버튼 ─────────────────────────────────────────────────────
 function setSeg(group, key, label){
   segState[group]={key:key, label:label};
-  var btns = document.querySelectorAll('[id^="'+group+'-"]');
-  btns.forEach(function(b){ b.classList.toggle('active', b.id===group+'-'+key); });
+  document.querySelectorAll('[id^="'+group+'-"]').forEach(function(b){
+    b.classList.toggle('active', b.id===group+'-'+key);
+  });
 }
 
 // ── 고객 등록 ─────────────────────────────────────────────────────────
@@ -341,9 +347,7 @@ async function submitCustomer(){
   document.getElementById('customer-form').style.display='none';
   document.getElementById('customer-success').style.display='block';
   document.getElementById('c-success-msg').textContent=name+'님의 정보가 등록되었습니다.\n담당자가 곧 도와드리겠습니다.';
-  if(scriptUrl){
-    try{await post({type:'customer',data:c});c.synced=true;save('cv_customers',customers);}catch(e){}
-  }
+  if(scriptUrl){try{await post({type:'customer',data:c});c.synced=true;save('cv_customers',customers);}catch(e){}}
 }
 
 function resetCustomer(){
@@ -379,9 +383,8 @@ function renderCustomerList(){
 
 function selectCustomer(id){
   selectedCustId=id; adminQty={};
-  // 세그먼트 초기화
   segState={pay:{key:'card',label:'카드'},recv:{key:'delivery',label:'택배배송'},paid:{key:'o',label:'O'}};
-  ['pay-card','pay-cash','recv-delivery','recv-visit','paid-o','paid-x'].forEach(function(bid){
+  ['pay-card','pay-transfer','pay-cash','recv-delivery','recv-pickup','recv-gallery','paid-o','paid-x'].forEach(function(bid){
     var el=document.getElementById(bid); if(el) el.classList.remove('active');
   });
   document.getElementById('pay-card').classList.add('active');
@@ -391,9 +394,9 @@ function selectCustomer(id){
   var c=customers.find(function(x){return x.id===id;});
   var order=orders.find(function(o){return o.customerId===id;});
   if(order&&order.items) order.items.forEach(function(i){adminQty[i.productId]=i.qty;});
-  if(order&&order.payMethod) { setSeg('pay', order.payMethod, order.payMethod==='card'?'카드':'현금'); }
-  if(order&&order.recvMethod) { setSeg('recv', order.recvMethod, order.recvMethod==='delivery'?'택배배송':'방문수령'); }
-  if(order&&order.paid) { setSeg('paid', order.paid, order.paid==='o'?'O':'X'); }
+  if(order&&order.payMethod)  setSeg('pay',  order.payMethod,  order.payLabel);
+  if(order&&order.recvMethod) setSeg('recv', order.recvMethod, order.recvLabel);
+  if(order&&order.paid)       setSeg('paid', order.paid,       order.paidLabel);
 
   var addrFull=(c.zip?'['+c.zip+'] ':'')+c.addr+(c.detail?' '+c.detail:'');
   document.getElementById('cust-summary').innerHTML=
@@ -403,10 +406,10 @@ function selectCustomer(id){
   var statusBar=document.getElementById('order-status-bar');
   var cancelBtn=document.getElementById('cancel-btn');
   if(order&&order.status==='ordered'){
-    statusBar.innerHTML='<div class="order-status-bar existing">기존 주문 불러옴 — 수정 후 저장하면 덮어씌워집니다</div>';
+    statusBar.innerHTML='<div class="order-status-bar existing">기존 주문 불러옴 — 수정 후 저장하면 이력이 남습니다</div>';
     cancelBtn.style.display='';
   } else if(order&&order.status==='cancelled'){
-    statusBar.innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 복구됩니다</div>';
+    statusBar.innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 새 주문으로 등록됩니다</div>';
     cancelBtn.style.display='none';
   } else {
     statusBar.innerHTML=''; cancelBtn.style.display='none';
@@ -452,18 +455,19 @@ function calcTotal(){
   document.getElementById('admin-total').textContent=total.toLocaleString()+'원';
 }
 
-// ── 주문 저장 — 상품 1개 = 1행 ────────────────────────────────────────
+// ── 주문 저장 ─────────────────────────────────────────────────────────
 async function saveOrder(){
   var items=[]; var tq=0; var total=0;
   products.forEach(function(p){var q=adminQty[p.id]||0;if(q>0){items.push({productId:p.id,name:p.name,qty:q,price:p.price});tq+=q;total+=q*p.price;}});
   if(!items.length){alert('주문할 상품을 선택해 주세요.');return;}
 
   var c=customers.find(function(x){return x.id===selectedCustId;});
-  var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\. /g,'-').replace('.','');
+  var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'-').replace(/-$/,'');
   var ei=orders.findIndex(function(o){return o.customerId===selectedCustId;});
+  var isEdit = ei>=0 && orders[ei].status==='ordered'; // 기존 주문이 있으면 수정
 
   var order={
-    id:ei>=0?orders[ei].id:Date.now(),
+    id: ei>=0 ? orders[ei].id : Date.now(),
     customerId:selectedCustId,
     customerName:c.name, customerPhone:c.phone,
     customerZip:c.zip, customerAddr:c.addr, customerDetail:c.detail,
@@ -475,7 +479,10 @@ async function saveOrder(){
     paid:segState.paid.key, paidLabel:segState.paid.label,
     orderDate:today,
     time:new Date().toLocaleString('ko-KR'),
-    status:'ordered', synced:false
+    status:'ordered', synced:false,
+    isEdit:isEdit,
+    // 수정 시 이전 주문 스냅샷 저장
+    prevItems: isEdit ? orders[ei].items : null
   };
 
   if(ei>=0){orders[ei]=order;}else{orders.push(order);}
@@ -486,7 +493,7 @@ async function saveOrder(){
   if(scriptUrl){
     st.innerHTML='<span class="spinner"></span> 구글 시트에 저장 중...';
     try{
-      await post({type:'order',data:order});
+      await post({type:'order', data:order});
       order.synced=true; save('cv_orders',orders);
       st.textContent='✓ 저장 완료 — '+c.name+'님 '+total.toLocaleString()+'원';
     }catch(e){st.textContent='⚠ 시트 저장 실패 (로컬에는 저장됨)';}
@@ -501,21 +508,24 @@ async function saveOrder(){
 
 // ── 주문 취소 ─────────────────────────────────────────────────────────
 async function cancelOrder(){
-  if(!confirm('주문을 취소할까요?'))return;
+  if(!confirm('주문을 취소할까요? 시트에 취소 이력이 남습니다.'))return;
   var ei=orders.findIndex(function(o){return o.customerId===selectedCustId;});
   if(ei<0)return;
   var c=customers.find(function(x){return x.id===selectedCustId;});
-  orders[ei].status='cancelled'; save('cv_orders',orders);
+  var cancelledOrder=orders[ei];
+  cancelledOrder.status='cancelled'; save('cv_orders',orders);
+
   var st=document.getElementById('admin-sync');
   if(scriptUrl){
     st.innerHTML='<span class="spinner"></span> 취소 처리 중...';
     try{
-      await post({type:'cancel',data:{customerName:c.name,customerPhone:c.phone,time:new Date().toLocaleString('ko-KR')}});
+      await post({type:'cancel', data:{customerName:c.name, customerPhone:c.phone, time:new Date().toLocaleString('ko-KR')}});
       st.textContent='✓ 취소 완료';
     }catch(e){st.textContent='취소됨 (시트 반영 실패)';}
   }else{ st.textContent='✓ 취소됨 (로컬)'; }
+
   document.getElementById('cancel-btn').style.display='none';
-  document.getElementById('order-status-bar').innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 복구됩니다</div>';
+  document.getElementById('order-status-bar').innerHTML='<div class="order-status-bar cancelled">취소된 주문 — 다시 저장하면 새 주문으로 등록됩니다</div>';
   renderCustomerList();
 }
 
@@ -554,16 +564,17 @@ function renderOrderList(){
 function exportCSV(){
   var active=orders.filter(function(o){return o.status==='ordered';});
   if(!active.length){alert('주문 데이터가 없습니다.');return;}
-  var rows=[['주문일','결제방법','입금','수령방법','주문자','연락처','상품명','주문수','주문금액','고객요청사항','배송여부','주소','상세주소','편번']];
+  var rows=[['주문일','결제방법','입금','수령방법','주문번호','주문자','연락처','상품명','주문수','주문박스','주문금액','배송비','고객요청사항','배송여부','주소','상세주소','편번','운송장번호']];
   active.forEach(function(o){
     o.items.forEach(function(item){
       rows.push([
-        o.orderDate, o.payLabel, o.paidLabel, o.recvLabel,
+        o.orderDate, o.payLabel, o.paidLabel, o.recvLabel, '',
         o.customerName, o.customerPhone,
-        item.name, item.qty, item.qty*item.price,
+        item.name, item.qty, '',
+        item.qty*item.price, '',
         o.customerMemo||'',
-        o.recvMethod==='delivery'?'Y':'N',
-        o.customerAddr||'', o.customerDetail||'', o.customerZip||''
+        recvToShipping[o.recvMethod]||'',
+        o.customerAddr||'', o.customerDetail||'', o.customerZip||'', ''
       ]);
     });
   });
