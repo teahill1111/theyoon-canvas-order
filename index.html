@@ -130,6 +130,7 @@ input::placeholder, textarea::placeholder { color: var(--text3); }
   @page { size: 80mm auto; margin: 0; }
 }
 .print-btn { width: 100%; padding: 13px; background: var(--blue-bg); color: var(--blue-text); border: 0.5px solid var(--blue-text); border-radius: var(--radius-lg); font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+#print-area { display: none; }
 </style>
 </head>
 <body>
@@ -432,7 +433,7 @@ function renderCustOrderList(){
   var list=document.getElementById('cust-order-list');
   if(!custOrders.length){empty.style.display='block';list.innerHTML='';return;}
   empty.style.display='none';
-  var html='<div class="print-btn" onclick="printReceipt()">영수증 인쇄</div>';
+  var html='';
   custOrders.slice().reverse().forEach(function(o){
     var isCancelled=o.status==='cancelled';
     var tags=o.items.map(function(i){return '<span class="order-item-tag">'+i.name+' ×'+i.qty+'</span>';}).join('');
@@ -447,6 +448,7 @@ function renderCustOrderList(){
     if(!isCancelled){
       html+='<div class="order-item-actions">'
         +'<div class="action-btn" onclick="showOrderEntry(\''+o.id+'\')">수정</div>'
+        +'<div class="action-btn" onclick="printReceipt(\''+o.id+'\')" style="background:var(--blue-bg);color:var(--blue-text);">인쇄</div>'
         +'<div class="action-btn danger" onclick="cancelOrder(\''+o.id+'\')">취소</div>'
         +'</div>';
     }
@@ -684,38 +686,46 @@ function removeProduct(i){products.splice(i,1);saveProducts();renderEditor();}
 function saveProducts(){save('cv_products',products);}
 function updateEventName(){var val=document.getElementById('event-name-input').value;document.getElementById('header-sub').textContent=val||'아트페어 현장 주문';localStorage.setItem('cv_event_name',val);}
 function clearAll(){if(!confirm('모든 고객·주문 데이터를 삭제할까요?'))return;customers=[];orders=[];localStorage.removeItem('cv_customers');localStorage.removeItem('cv_orders');renderCustomerList();alert('초기화 완료');}
-function printReceipt(){
-  var activeOrders=orders.filter(function(o){return o.customerId===selectedCustId&&o.status==='active';});
-  if(!activeOrders.length){alert('유효한 주문이 없습니다.');return;}
+function printReceipt(orderId){
+  var o=orders.find(function(x){return String(x.id)===String(orderId);});
+  if(!o){alert('주문을 찾을 수 없습니다.');return;}
 
   var today=new Date().toLocaleDateString('ko-KR');
-  var total=activeOrders.reduce(function(s,o){return s+o.total;},0);
-  var totalQty=activeOrders.reduce(function(s,o){return s+o.totalQty;},0);
+  var eventName=localStorage.getItem('cv_event_name')||'아트페어';
 
   var itemRows='';
-  activeOrders.forEach(function(o){
-    o.items.forEach(function(item){
-      itemRows+='<tr>'
-        +'<td style="padding:3px 0;">'+item.name+' × '+item.qty+'</td>'
-        +'<td style="text-align:right;padding:3px 0;">'+(item.qty*item.price).toLocaleString()+'원</td>'
-        +'</tr>';
-    });
+  o.items.forEach(function(item){
+    itemRows+='<tr>'
+      +'<td style="padding:4px 0;">'+item.name+' × '+item.qty+'</td>'
+      +'<td style="text-align:right;padding:4px 0;">'+(item.qty*item.price).toLocaleString()+'원</td>'
+      +'</tr>';
   });
 
-  document.getElementById('print-area').innerHTML=
-    '<div style="width:72mm;font-family:monospace;font-size:12px;padding:4mm;">'
-    +'<div style="text-align:center;font-size:11px;color:#666;margin-bottom:8px;">'+today+'</div>'
-    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
-    +'<table style="width:100%;border-collapse:collapse;font-size:12px;">'
-    +'<tbody>'+itemRows+'</tbody>'
-    +'</table>'
-    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<style>'
+    +'body{font-family:monospace;font-size:12px;width:72mm;margin:0;padding:4mm;}'
+    +'table{width:100%;border-collapse:collapse;}'
+    +'.dashed{border-top:1px dashed #000;margin:6px 0;}'
+    +'.center{text-align:center;}'
+    +'.bold{font-weight:bold;}'
+    +'@page{size:80mm auto;margin:0;}'
+    +'@media print{body{margin:0;padding:4mm;}}'
+    +'</style></head><body>'
+    +'<div class="center bold" style="font-size:14px;margin-bottom:4px;">'+eventName+'</div>'
+    +'<div class="center" style="font-size:11px;color:#666;margin-bottom:8px;">'+today+'</div>'
+    +'<div class="dashed"></div>'
+    +'<table><tbody>'+itemRows+'</tbody></table>'
+    +'<div class="dashed"></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:bold;">'
-    +'<span>합계 ('+totalQty+'개)</span><span>'+total.toLocaleString()+'원</span></div>'
-    +'<div style="border-top:1px dashed #000;margin:6px 0;"></div>'
-    +'</div>';
+    +'<span>합계 ('+o.totalQty+'개)</span><span>'+o.total.toLocaleString()+'원</span></div>'
+    +'<div class="dashed"></div>'
+    +'<div class="center" style="font-size:10px;color:#999;margin-top:8px;">감사합니다</div>'
+    +'<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};}<\/script>'
+    +'</body></html>';
 
-  window.print();
+  var w=window.open('','_blank','width=400,height=600');
+  w.document.write(html);
+  w.document.close();
 }
 function save(key,val){localStorage.setItem(key,JSON.stringify(val));}
 function post(data){return fetch(scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify(data)});}
