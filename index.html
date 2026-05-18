@@ -525,7 +525,7 @@ async function saveOrder(){
   var c=customers.find(function(x){return x.id===selectedCustId;});
   var today=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\.\s*/g,'-').replace(/-$/,'');
   var isEdit=!!editingOrderId;
-  var bigo = isEdit ? '주문수정' : '신규주문';
+  var bigo = isEdit ? '주문수정완료' : '신규주문';
 
   // 수정인 경우 기존 주문 시퀀스 유지
   var custOrders=orders.filter(function(o){return o.customerId===selectedCustId;});
